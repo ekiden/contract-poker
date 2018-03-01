@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package poker;
+
+//Messages relevant to game state
+
+//THIS SHOULD BE PRIVATE
+message PokerState {
+    uint64 game_id = 1;
+    uint64 blind = 2;
+    uint64 max_players = 3;
+    uint64 time_per_turn = 4;
+    repeated PlayerState players = 5;
+    repeated PlayerState on_deck = 6;
+    repeated bytes cards = 7;
+    repeated bytes deck = 8;
+    uint64 pot = 9;
+    uint64 min_bet = 10;
+    string dealer = 11;
+    string next_player = 12;
+    string last_player = 13;
+    string game_stage = 14;
+    repeated uint32 seed = 15;
+
+}
+
+message PublicStateRequest {}
+
+message PublicState {
+    uint64 game_id = 1;
+    uint64 blind = 2;
+    uint64 max_players = 3;
+    uint64 time_per_turn = 4;
+    repeated PlayerState players = 5;
+    repeated PlayerState on_deck = 6;
+    uint64 pot = 7;
+    uint64 min_bet = 8;
+    string dealer = 9;
+    string next_player = 10;
+    string last_player = 11;
+    string game_stage = 12;
+}
+
+//Messages relevant to player state
+
+message PlayerStateRequest {
+    string sender = 1;
+ }
+ 
+ message PlayerState {
+    string addr = 1;
+    repeated bytes cards = 2;
+    string action = 3;
+    bool playing = 4;
+    uint64 bet = 5;
+    uint64 balance = 6;
+ }
+
+// Messages to interact with the game
+// Note that the responses to every action may later prove to be unecessary or need to be modified
+
+message CreateGameRequest {
+    uint64 blind = 1;
+    uint64 max_players = 3;
+    uint64 time_per_turn = 4;
+}
+
+message CreateGameResponse {
+    bool success = 1;
+}
+
+message JoinGameRequest {
+    string sender = 1;
+    uint64 deposit = 2;
+    repeated uint32 seed = 3;
+}
+
+message JoinGameResponse {
+    bool joined = 1;
+    bool playing = 2;
+}
+
+message PlayHandRequest{
+    string sender = 1;
+}
+
+message PlayHandResponse{
+    bool success = 1;
+}
+
+message TakeActionRequest {
+    string sender = 1;
+    string action = 2;
+    uint64 amount = 3;
+}
+
+message TakeActionResponse {
+    bool success = 1;
+}
+
+message WithdrawRequest {
+    string sender = 1;
+}
+
+message WithdrawResponse {
+    bool success = 1;
+    uint64 balance = 2;
+}

@@ -1,0 +1,31 @@
+[package]
+name = "poker"
+version = "0.1.0"
+authors = ["Pranav Gaddamadugu <pranavsaig@gmail.com>"]
+build = "build.rs"
+
+[lib]
+name = "poker"
+crate-type = ["staticlib"]
+
+[features]
+default = []
+
+[dependencies]
+poker-api = { path = "./api", features = ["sgx"], default-features = false }
+sgx_tstd = { git = "https://github.com/ekiden/rust-sgx-sdk" }
+libcontract-common = { path = "../../libcontract/common", features = ["sgx"], default-features = false }
+libcontract-trusted = { path = "../../libcontract/trusted" }
+protobuf-sgx = { git = "https://github.com/ekiden/rust-protobuf" }
+
+rand = "0.4.0"
+rs_poker = "0.4.1"
+serde = "1.0"
+serde_json = "1.0"
+serde_derive = "1.0"
+serde_cbor = "0.8.2"
+
+#External crates#
+
+[build-dependencies]
+libcontract-utils = { path = "../../libcontract/utils" }
