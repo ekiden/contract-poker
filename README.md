@@ -44,7 +44,7 @@ This should install any required dependencies and build all packages. By default
 built in simulation mode. To change this, do `export SGX_MODE=HW` (currently untested) before
 running the `cargo make` command.
 
-The built contract will be stored under `target/enclave/dummy.signed.so`.
+The built contract will be stored under `target/enclave/poker.signed.so`.
 
 ## Building the example client
 
