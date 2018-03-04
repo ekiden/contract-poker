@@ -6,10 +6,9 @@ extern crate sgx_tstd as std;
 
 extern crate protobuf;
 
-extern crate libcontract_common;
+extern crate ekiden_core_common;
 #[macro_use]
-extern crate libcontract_trusted;
-
+extern crate ekiden_core_trusted;
 
 #[macro_use]
 extern crate poker_api;
@@ -22,7 +21,7 @@ mod poker_contract;
 use poker_contract::PokerContract;
 use poker_api::*;
 
-use libcontract_common::{Address, Contract, ContractError, with_contract_state};
+use ekiden_core_common::{with_contract_state, Address, Contract, ContractError};
 
 #[allow(unused)]
 #[prelude_import]
@@ -42,7 +41,10 @@ fn create(request: &CreateGameRequest) -> Result<(PokerState, CreateGameResponse
     Ok((contract.get_state(), response))
 }
 
-fn join(state: &PokerState, request: &JoinGameRequest) -> Result<(PokerState, JoinGameResponse), ContractError> {
+fn join(
+    state: &PokerState,
+    request: &JoinGameRequest,
+) -> Result<(PokerState, JoinGameResponse), ContractError> {
     let mut playing;
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
         playing = contract.join_game(
@@ -61,11 +63,12 @@ fn join(state: &PokerState, request: &JoinGameRequest) -> Result<(PokerState, Jo
     Ok(state, response)
 }
 
-fn play(state: &PokerState, request: &PlayHandRequest) -> Result<(PokerState, PlayHandResponse), ContractError> {
+fn play(
+    state: &PokerState,
+    request: &PlayHandRequest,
+) -> Result<(PokerState, PlayHandResponse), ContractError> {
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
-        contract.play_hand(
-            &Address::from(request.get_sender().tos_string()),
-        )?;
+        contract.play_hand(&Address::from(request.get_sender().tos_string()))?;
 
         Ok(())
     })?;
@@ -76,7 +79,10 @@ fn play(state: &PokerState, request: &PlayHandRequest) -> Result<(PokerState, Pl
     Ok(state, response)
 }
 
-fn take_action(state: &PokerState, request: &TakeActionRequest) -> Result<(PokerState, TakeActionResponse), ContractError> {
+fn take_action(
+    state: &PokerState,
+    request: &TakeActionRequest,
+) -> Result<(PokerState, TakeActionResponse), ContractError> {
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
         let action = match request.get_action().to_string() {
             "Check" => poker_contract::Action::Check,
@@ -100,14 +106,13 @@ fn take_action(state: &PokerState, request: &TakeActionRequest) -> Result<(Poker
     Ok(state, response)
 }
 
-
-
-fn leave(state: &PokerState, request: &WithdrawRequest) -> Result<(PokerState, WithdrawResponse), ContractError> {
+fn leave(
+    state: &PokerState,
+    request: &WithdrawRequest,
+) -> Result<(PokerState, WithdrawResponse), ContractError> {
     let mut balance = 0;
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
-        balance = contract.withdraw(
-            &Address::from(request.get_sender().to_string()),
-        )?;
+        balance = contract.withdraw(&Address::from(request.get_sender().to_string()))?;
 
         Ok(())
     })?;
@@ -119,18 +124,22 @@ fn leave(state: &PokerState, request: &WithdrawRequest) -> Result<(PokerState, W
     Ok(state, response)
 }
 
-fn get_player_information(state: &PokerState, request: &PlayerStateRequest) -> Result<PlayerState, ContractError> {
+fn get_player_information(
+    state: &PokerState,
+    request: &PlayerStateRequest,
+) -> Result<PlayerState, ContractError> {
     let contract = PokerContract::from_state(state);
     let player_state = contract.get_player_state(&Address::from(request.get_sender().to_string()));
 
     Ok(player_state)
 }
 
-fn get_game_information(state: &PokerState, request: &PublicStateRequest) -> Result<PublicState, ContractError> {
+fn get_game_information(
+    state: &PokerState,
+    request: &PublicStateRequest,
+) -> Result<PublicState, ContractError> {
     let contract = PokerContract::from_state(state);
     let public_game_state = contract.get_public_state();
 
     Ok(public_game_state)
 }
- 
-

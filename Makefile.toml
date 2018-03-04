@@ -1,1 +1,16 @@
-extend = "../Makefile.toml"
+extend = "ekiden/contracts/Makefile.toml"
+
+[env]
+EKIDEN_ROOT = { script = ["echo $(git rev-parse --show-toplevel)/ekiden"] }
+
+[tasks.pre-build]
+script_runner = "bash"
+script = [
+'''
+pushd "${EKIDEN_ROOT}/third_party/rust-sgx-sdk"
+if [ "$(git log -1 --format="%s")" != "serde rusty-machine and rulinalg" ]; then
+  git am "../../../rm_serde.patch"
+fi
+popd
+'''
+]

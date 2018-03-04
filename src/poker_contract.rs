@@ -1,25 +1,24 @@
 //An implementation of Texas Hold'em compatible with Ekiden
 
-use libcontract_common::{Address, Contract, ContractError};
+use ekiden_core_common::{Address, Contract, ContractError};
 
-use poker_api::{PokerState, PlayerState, PublicState};
-use rs_poker::core::{Deck, Card, Hand, Rankable};
+use poker_api::{PlayerState, PokerState, PublicState};
+use rs_poker::core::{Card, Deck, Hand, Rankable};
 use rand::*;
 use serde_cbor;
 use core::slice::Iter;
 use std::collections::HashMap;
-
 
 pub struct PokerContract<'a> {
     game_id: u64,
     blind: u64,
     max_players: u64,
     time_per_turn: u64,
-    players: Vec<Player>, 
+    players: Vec<Player>,
     on_deck: Vec<Player>,
     index: HashMap<String, i32>,
     cards: Vec<Card>,
-    deck: &'a Iter<'a, Card>, 
+    deck: &'a Iter<'a, Card>,
     pot: u64,
     min_bet: u64,
     dealer: i32,
@@ -27,7 +26,7 @@ pub struct PokerContract<'a> {
     last_player: i32,
     stage: GameStage,
     seed: [u8; 32],
-}          
+}
 
 //TODO: how to index players and get the right one
 //TODO: winning logic
@@ -36,8 +35,13 @@ pub struct PokerContract<'a> {
 //TODO: serialization stuff
 
 impl<'a> PokerContract<'a> {
-    //Creates a new instance of a poker game with all values set to default save for provided parameters
-    pub fn new(blind: u64, max_players: u64, time_per_turn: u64) -> Result<PokerContract<'a>, ContractError> {
+    //Creates a new instance of a poker game with all values set to default
+    //save for provided parameters
+    pub fn new(
+        blind: u64,
+        max_players: u64,
+        time_per_turn: u64,
+    ) -> Result<PokerContract<'a>, ContractError> {
         if max_players > 22 || blind == 0 || time_per_turn == 0 {
             return Err(ContractError::new("Invalid game paramaters."));
         }
@@ -62,10 +66,15 @@ impl<'a> PokerContract<'a> {
     }
 
     //Allows a player to join a game. If a hand is being played, the player is placed `on_deck`
-    pub fn join_game(&mut self, msg_sender: &Address, deposit: u64, seed: [u8; 32]) -> Result<bool, ContractError> {
+    pub fn join_game(
+        &mut self,
+        msg_sender: &Address,
+        deposit: u64,
+        seed: [u8; 32],
+    ) -> Result<bool, ContractError> {
         //Validate the seed. (Might not need this)
         if seed.len() != 32 {
-            return Err(ContractError::new("Invalid format for the random seed."))
+            return Err(ContractError::new("Invalid format for the random seed."));
         }
         for i in 0..32 {
             self.seed[i] = self.seed[i] ^ seed[i];
@@ -103,27 +112,32 @@ impl<'a> PokerContract<'a> {
                     self.index[new_player.addr.to_string()] = -1;
                     return Ok(false);
                 }
-            }    
+            }
             GameStage::Play => {
                 self.on_deck.push(new_player);
                 self.index[new_player.addr.to_string()] = -1;
                 return Ok(false);
             }
         }
-    }    
+    }
 
-    //Initiates the start of the hand, provided that there is more than one player joined in the game.
+    //Initiates the start of the hand, provided that there is more than one player
+    //joined in the game.
     pub fn play_hand(&mut self, msg_sender: &Address) -> Result<(), ContractError> {
         if self.stage != GameStage::Join {
-            return Err(ContractError::new("Cannot call `play_hand` if the game is not in the `Join` stage."));
+            return Err(ContractError::new(
+                "Cannot call `play_hand` if the game is not in the `Join` stage.",
+            ));
         }
-        //Add players on deck up to the maximum number of players allowed 
+        //Add players on deck up to the maximum number of players allowed
         for i in 0..(self.max_players - self.players.len()) {
             self.players.append(self.on_deck.remove(i));
         }
         //Check there are at least 2 players
         if self.players.len() < 2 {
-            return Err(ContractError::new("Cannot call 'play_hand' with less than 2 players."));
+            return Err(ContractError::new(
+                "Cannot call 'play_hand' with less than 2 players.",
+            ));
         }
         //Shuffle the cards.
         let mut deck = Deck::default().iter().collect();
@@ -166,12 +180,19 @@ impl<'a> PokerContract<'a> {
     //Allows a player to take an action or store an action to be made when it is a players turn.
     //The last player in line will initiate the drawing of the next cards.
     //Illegal actions return a contract error
-    pub fn take_action(&mut self, msg_sender: &Address, action: Action, value: u64) -> Result<(), ContractError> {
+    pub fn take_action(
+        &mut self,
+        msg_sender: &Address,
+        action: Action,
+        value: u64,
+    ) -> Result<(), ContractError> {
         if self.stage != GameStage::Play {
-            return Err(ContractError::new("Cannot call `take_action` if the game is not in the `Play` stage."))
+            return Err(ContractError::new(
+                "Cannot call `take_action` if the game is not in the `Play` stage.",
+            ));
         }
         if self.index[msg_sender.to_string()] != self.next_player {
-            return Err(ContractError::new("Out of turn"))
+            return Err(ContractError::new("Out of turn"));
         }
         let player_index = self.index[msg_sender.to_string()];
         match action {
@@ -181,12 +202,14 @@ impl<'a> PokerContract<'a> {
             Action::Check => {
                 if self.min_bet != 0 {
                     return Err(ContractError::new("Invalid move."));
-                } 
+                }
             }
             Action::Raise => {
                 if value <= self.min_bet * 2 {
-                    return Err(ContractError::new("Invalid raise. Must raise by two times the minimum bet."));
-                } 
+                    return Err(ContractError::new(
+                        "Invalid raise. Must raise by two times the minimum bet.",
+                    ));
+                }
                 self.min_bet = value;
                 self.players[player_index].bet = value;
                 self.players[player_index].deposit -= value - self.players[player_index].bet;
@@ -201,7 +224,7 @@ impl<'a> PokerContract<'a> {
             }
         }
         self.next_player = (self.next_player + 1) % self.players.len();
- 
+
         if msg_sender == self.last_player && action != Action::Raise {
             //Put all bets into the pot
             for player in self.players.iter() {
@@ -215,7 +238,7 @@ impl<'a> PokerContract<'a> {
             } else {
                 self.turn_card()?;
             }
-        }    
+        }
     }
 
     //Allows a player to leave the game with his or her final balance.
@@ -224,11 +247,11 @@ impl<'a> PokerContract<'a> {
     pub fn withdraw(&mut self, msg_sender: &Address) -> Result<u64, ContractError> {
         //Remove player from current hand.
         let player_index = self.index[msg_sender.to_string()];
-        if  player_index > -1 {
+        if player_index > -1 {
             //Fold cards
-            return self.fold_player(player_index)?;  
+            return self.fold_player(player_index)?;
         } else {
-            //Remove player from waiting 
+            //Remove player from waiting
             for i in 0..self.on_deck.len() {
                 if msg_sender == self.on_deck[i].addr {
                     return Ok(self.on_deck.remove(i).balance);
@@ -250,23 +273,23 @@ impl<'a> PokerContract<'a> {
                 self.cards.push(card);
                 Ok(())
             }
-            () => {
-                Err(ContractError::new("Error in turning the cards. Deck is empty."))
-            }
+            () => Err(ContractError::new(
+                "Error in turning the cards. Deck is empty.",
+            )),
         }
     }
 
     fn fold_player(&mut self, player_index: i32) -> Result<u64, ContractError> {
         self.pot += self.players[player_index].bet;
-        self.players[player_index].bet = 0; 
-        for i in player_index+1..self.players.len() {
+        self.players[player_index].bet = 0;
+        for i in player_index + 1..self.players.len() {
             self.index[self.players[i].addr.to_string()] -= 1;
         }
         Ok(self.players.remove(player_index).balance)
     }
 
     fn pay_winners(&mut self) -> Result<(), ContractError> {
-        let winners : Vec<Player> = Vec::new();
+        let winners: Vec<Player> = Vec::new();
         let max = 0;
         for player in self.players.iter() {
             let rank = Hand::new_with_cards(&player.cards).rank();
@@ -284,7 +307,6 @@ impl<'a> PokerContract<'a> {
         self.pot = 0;
         Ok(())
     }
-
 
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++
     // FUNCTIONS TO REQUEST AND FORMAT STATE
@@ -318,14 +340,11 @@ impl<'a> PokerContract<'a> {
         state.set_playing(player.playing);
         state.set_bet(player.bet);
         state.set_balance(player.balance);
-        
+
         Ok(state)
     }
 
-    pub fn from_player_state(state: &PlayerState) -> Player {
-
-    }
-
+    pub fn from_player_state(state: &PlayerState) -> Player {}
 
     fn serialize_players(&mut self, players: &Vec<Player>) -> Vec<PlayerState> {
         let formatted_players: Vec<PlayerState> = Vec::new();
@@ -335,12 +354,7 @@ impl<'a> PokerContract<'a> {
         }
         return formatted_players;
     }
-
 }
-
-  
-
-
 
 impl<'a> Contract<PokerState> for PokerContract<'a> {
     /// Get serializable contract state.
@@ -384,12 +398,10 @@ impl<'a> Contract<PokerState> for PokerContract<'a> {
             seed: state.get_seed().clone(),
         }
     }
-
 }
 
-
 //++++++++++++++++++++++++++++++++++++++++++++++
-// EXTRA STRUCTS AND ENUMS                    
+// EXTRA STRUCTS AND ENUMS
 //++++++++++++++++++++++++++++++++++++++++++++++
 
 pub struct Player {
@@ -399,9 +411,7 @@ pub struct Player {
     playing: bool,
     bet: u64,
     balance: u64,
-}  
-
-
+}
 
 enum GameStage {
     Join,
@@ -409,7 +419,6 @@ enum GameStage {
 }
 
 impl GameStage {
-
     fn to_string(&self) -> String {
         match self {
             GameStage::Join => return "Join",
@@ -434,11 +443,10 @@ pub enum Action {
 }
 
 impl Action {
-
     fn to_string(&self) -> String {
         match self {
             Action::None => "None",
-            Action::Check =>  "Check",
+            Action::Check => "Check",
             Action::Match => "Match",
             Action::Bet => "Bet",
             Action::Fold => "Fold",
@@ -454,5 +462,4 @@ impl Action {
             "Fold" => Action::Fold,
         }
     }
-
 }

@@ -1,7 +1,10 @@
 [package]
 name = "poker"
 version = "0.1.0"
-authors = ["Pranav Gaddamadugu <pranavsaig@gmail.com>"]
+authors = [
+	"Pranav Gaddamadugu <pranavsaig@gmail.com>",
+	"Andy Wang <andywcal@berkeley.edu>" 
+]
 build = "build.rs"
 
 [lib]
@@ -13,19 +16,20 @@ default = []
 
 [dependencies]
 poker-api = { path = "./api", features = ["sgx"], default-features = false }
-sgx_tstd = { git = "https://github.com/ekiden/rust-sgx-sdk" }
-libcontract-common = { path = "../../libcontract/common", features = ["sgx"], default-features = false }
-libcontract-trusted = { path = "../../libcontract/trusted" }
-protobuf-sgx = { git = "https://github.com/ekiden/rust-protobuf" }
+ekiden-core-common = { path = "./ekiden/core/common" }
+ekiden-core-trusted = { path = "./ekiden/core/trusted" }
+ndarray = { git = "https://github.com/ekiden/rust-ndarray", features = ["serde-1"] }
+protobuf = "1.4.3"
+serde = { git = "https://github.com/ekiden/serde" }
+serde_cbor = { git = "https://github.com/ekiden/cbor" }
+serde_derive = "1.0.27"
 
-rand = "0.4.0"
-rs_poker = "0.4.1"
-serde = "1.0"
-serde_json = "1.0"
-serde_derive = "1.0"
-serde_cbor = "0.8.2"
-
-#External crates#
+[target.'cfg(not(target_env = "sgx"))'.dependencies]
+rand = "0.4.2"
 
 [build-dependencies]
-libcontract-utils = { path = "../../libcontract/utils" }
+ekiden-tools = { path = "./ekiden/tools" }
+ekiden-core-edl = { path = "./ekiden/core/edl" }
+
+[workspace]
+exclude = ["ekiden"]
