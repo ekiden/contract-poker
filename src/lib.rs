@@ -1,6 +1,3 @@
-#![feature(prelude_import)]
-#![no_std]
-
 #[macro_use]
 extern crate sgx_tstd as std;
 

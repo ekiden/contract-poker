@@ -1,4 +1,4 @@
-contract_api! {
+rpc_api! {
     metadata {
         name = poker;
         version = "0.1.0";

@@ -15,7 +15,7 @@ crate-type = ["staticlib"]
 default = []
 
 [dependencies]
-poker-api = { path = "./api", features = ["sgx"], default-features = false }
+poker-api = { path = "./api" }
 ekiden-core-common = { path = "./ekiden/core/common" }
 ekiden-core-trusted = { path = "./ekiden/core/trusted" }
 ndarray = { git = "https://github.com/ekiden/rust-ndarray", features = ["serde-1"] }
