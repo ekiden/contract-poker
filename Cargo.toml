@@ -32,4 +32,7 @@ ekiden-tools = { path = "./ekiden/tools" }
 ekiden-core-edl = { path = "./ekiden/core/edl" }
 
 [workspace]
+members = [
+    "clients/test-client"
+]
 exclude = ["ekiden"]

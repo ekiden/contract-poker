@@ -1,0 +1,19 @@
+[package]
+name = "test-client"
+version = "0.1.0"
+authors = [
+    "Andy Wang <andywcal@berkeley.edu>"
+]
+
+[features]
+default = []
+
+[dependencies]
+client-utils = { path = "../../ekiden/clients/utils" }
+ekiden-core-common = { path = "../../ekiden/core/common" }
+ekiden-rpc-client = { path = "../../ekiden/rpc/client" }
+poker-api = { path = "../../api" }
+clap = "2.29.1"
+futures = "0.1"
+rand = "0.4"
+tokio-core = "0.1"
