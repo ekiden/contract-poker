@@ -1,26 +1,32 @@
+#![feature(use_extern_macros)]
+
 #[macro_use]
 extern crate clap;
+extern crate futures;
 extern crate rand;
+extern crate tokio_core;
 
 #[macro_use]
 extern crate client_utils;
-#[macro_use]
-extern crate compute_client;
 extern crate ekiden_core_common;
+extern crate ekiden_rpc_client;
 
-#[macro_use]
 extern crate poker_api;
 
 use clap::{App, Arg};
-
 use rand::{thread_rng, Rng};
 
-create_client_api!();
+use ekiden_rpc_client::create_client_rpc;
+use poker_api::with_api;
+
+with_api! {
+    create_client_rpc!(poker, poker_api, api);
+}
 
 /// Initializes the poker scenario.
 fn init<Backend>(client: &mut poker::Client<Backend>, _runs: usize, _threads: usize)
 where
-    Backend: compute_client::backend::ContractClientBackend,
+    Backend: ekiden_rpc_client::backend::ContractClientBackend,
 {
     // Create new poker contract.
     let mut request = poker::CreateGameRequest::new();
@@ -46,7 +52,7 @@ where
 /// Runs the poker scenario.
 fn scenario<Backend>(client: &mut poker::Client<Backend>)
 where
-    Backend: compute_client::backend::ContractClientBackend,
+    Backend: ekiden_rpc_client::backend::ContractClientBackend,
 {
     //Second player joins
     let response = client
@@ -106,7 +112,7 @@ where
 /// Finalize the poker scenario.
 fn finalize<Backend>(client: &mut poker::Client<Backend>, runs: usize, _threads: usize)
 where
-    Backend: compute_client::backend::ContractClientBackend,
+    Backend: ekiden_rpc_client::backend::ContractClientBackend,
 {
     //both withdraw, verify final balance
     let response = client
@@ -116,7 +122,7 @@ where
         request
     })
     .unwrap();
-    assert_eq!(request.get_balance(), 3);
+    assert_eq!(response.get_balance(), 3);
 
     let response = client
     .withdraw({
@@ -125,7 +131,7 @@ where
         request
     })
     .unwrap();
-    assert_eq!(request.get_balance(), 6);
+    assert_eq!(response.get_balance(), 6);
 }
 
 #[cfg(feature = "benchmark")]
