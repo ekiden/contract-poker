@@ -2,18 +2,17 @@ rpc_api! {
     metadata {
         name = poker;
         version = "0.1.0";
-        state_type = PokerState;
         client_attestation_required = false;
     }
 
-    rpc create(CreateGameRequest) -> (PublicState, CreateGameResponse);
+    rpc create(CreateGameRequest) -> (CreateGameResponse);
 
-    rpc join(state, JoinGameRequest) -> (PublicState, JoinGameResponse);
+    rpc join(JoinGameRequest) -> (JoinGameResponse);
 
-    rpc play(state, PlayHandRequest) -> (PublicState, PlayHandResponse);
+    rpc play(PlayHandRequest) -> (PlayHandResponse);
 
-    rpc take_action(state, TakeActionRequest) -> (PublicState, TakeActionResponse);
+    rpc take_action(TakeActionRequest) -> (TakeActionResponse);
 
-    rpc leave(state, WithdrawRequest) -> (PublicState, WithdrawResponse);
+    rpc leave(WithdrawRequest) -> (WithdrawResponse);
 
 }

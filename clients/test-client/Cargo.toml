@@ -15,6 +15,6 @@ ekiden-core-common = { path = "../../ekiden/core/common" }
 ekiden-rpc-client = { path = "../../ekiden/rpc/client" }
 poker-api = { path = "../../api" }
 clap = "2.29.1"
-futures = "0.1"
 rand = "0.4"
+futures = "0.1"
 tokio-core = "0.1"

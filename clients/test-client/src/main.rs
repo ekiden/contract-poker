@@ -14,7 +14,7 @@ extern crate ekiden_rpc_client;
 extern crate poker_api;
 
 use clap::{App, Arg};
-use rand::{thread_rng, Rng};
+use rand::{Rng};
 
 use ekiden_rpc_client::create_client_rpc;
 use poker_api::with_api;
@@ -34,19 +34,18 @@ where
     request.set_max_players(4);
     request.set_time_per_turn(4);
 
-    client.create(request).unwrap();
+    ekiden_rpc_client::FutureExtra::wait(client.create(request)).unwrap();
 
+    let mut rng = rand::thread_rng();
     // Check balances.
-    let response = client
-    .join({
+    let response = ekiden_rpc_client::FutureExtra::wait(client.join({
         let mut request = poker::JoinGameRequest::new();
         request.set_sender("client1".to_string());
         request.set_deposit(5);
-        request.set_seed(3);
+        request.set_seed(vec![rng.gen::<u32>(); 32]);
         request
-    })
-    .unwrap();
-    assert_eq!(response.get_joined(), 1);
+    })).unwrap();
+    assert_eq!(response.get_joined(), true);
 }
 
 /// Runs the poker scenario.
@@ -55,82 +54,69 @@ where
     Backend: ekiden_rpc_client::backend::ContractClientBackend,
 {
     //Second player joins
-    let response = client
-    .join({
+    let mut rng = rand::thread_rng();
+    let response = ekiden_rpc_client::FutureExtra::wait(client.join({
         let mut request = poker::JoinGameRequest::new();
         request.set_sender("client2".to_string());
         request.set_deposit(4);
-        request.set_seed(2);
+        request.set_seed(vec![rng.gen::<u32>(), 32]);
         request
-    })
-    .unwrap();
-    assert_eq!(response.get_joined(), 1);
+    })).unwrap();
+    assert_eq!(response.get_joined(), true);
 
     //Start game
-    let response = client
-    .play({
+    let response = ekiden_rpc_client::FutureExtra::wait(client.play({
         let mut request = poker::PlayHandRequest::new();
         request.set_sender("client1".to_string());
         request
-    })
-    .unwrap();
-    assert_eq!(response.get_success(), 1);
+    })).unwrap();
+    assert_eq!(response.get_success(), true);
 
     //both check
-    let response = client
-    .take_action({
+    let response = ekiden_rpc_client::FutureExtra::wait(client.take_action({
         let mut request = poker::TakeActionRequest::new();
         request.set_sender("client1".to_string());
         request.set_action("Check".to_string());
         request
-    })
-    .unwrap();
-    assert_eq!(response.get_success(), 1);
+    })).unwrap();
+    assert_eq!(response.get_success(), true);
 
-    let response = client
-    .take_action({
+    let response = ekiden_rpc_client::FutureExtra::wait(client.take_action({
         let mut request = poker::TakeActionRequest::new();
         request.set_sender("client2".to_string());
         request.set_action("Check".to_string());
         request
-    })
-    .unwrap();
-    assert_eq!(response.get_success(), 1);
+    })).unwrap();
+    assert_eq!(response.get_success(), true);
 
     //fold
-    let response = client
-    .take_action({
+    let response = ekiden_rpc_client::FutureExtra::wait(client.take_action({
         let mut request = poker::TakeActionRequest::new();
         request.set_sender("client1".to_string());
         request.set_action("Fold".to_string());
         request
-    })
-    .unwrap();
-    assert_eq!(response.get_success(), 1);
+    })).unwrap();
+    assert_eq!(response.get_success(), true);
 }
 
 /// Finalize the poker scenario.
-fn finalize<Backend>(client: &mut poker::Client<Backend>, runs: usize, _threads: usize)
+fn finalize<Backend>(client: &mut poker::Client<Backend>, _runs: usize, _threads: usize)
 where
     Backend: ekiden_rpc_client::backend::ContractClientBackend,
 {
     //both withdraw, verify final balance
-    let response = client
-    .withdraw({
+    let response = ekiden_rpc_client::FutureExtra::wait(client.leave({
         let mut request = poker::WithdrawRequest::new();
         request.set_sender("client1".to_string());
         request
-    })
-    .unwrap();
+    })).unwrap();
     assert_eq!(response.get_balance(), 3);
 
-    let response = client
-    .withdraw({
+    let response = ekiden_rpc_client::FutureExtra::wait(client.leave({
         let mut request = poker::WithdrawRequest::new();
         request.set_sender("client2".to_string());
         request
-    })
-    .unwrap();
+    })).unwrap();
     assert_eq!(response.get_balance(), 6);
 }
 
