@@ -1,6 +1,6 @@
 //An implementation of Texas Hold'em compatible with Ekiden
-
-use ekiden_core_common::{Address, Contract, ContractError};
+#![no_std]
+use ekiden_core_common::{Address, Contract};
 
 use poker_api::{PlayerState, PokerState, PublicState};
 use rs_poker::core::{Card, Deck, Hand, Rankable};
@@ -41,14 +41,14 @@ impl<'a> PokerContract<'a> {
         blind: u64,
         max_players: u64,
         time_per_turn: u64,
-    ) -> Result<PokerContract<'a>, ContractError> {
+    ) -> Result<PokerContract<'a>> {
         if max_players > 22 || blind == 0 || time_per_turn == 0 {
             return Err(ContractError::new("Invalid game paramaters."));
         }
 
         //TODO: Review if this is the game state that is trying to be returned.
         return Ok(PokerContract {
-            game_id: random::<u64>(),
+            game_id: blind+max_players+time_per_turn,
             blind,
             max_players,
             time_per_turn,
@@ -71,7 +71,7 @@ impl<'a> PokerContract<'a> {
         msg_sender: &Address,
         deposit: u64,
         seed: [u8; 32],
-    ) -> Result<bool, ContractError> {
+    ) -> Result<bool> {
         //Validate the seed. (Might not need this)
         if seed.len() != 32 {
             return Err(ContractError::new("Invalid format for the random seed."));
@@ -123,7 +123,7 @@ impl<'a> PokerContract<'a> {
 
     //Initiates the start of the hand, provided that there is more than one player
     //joined in the game.
-    pub fn play_hand(&mut self, msg_sender: &Address) -> Result<(), ContractError> {
+    pub fn play_hand(&mut self, msg_sender: &Address) -> Result<()> {
         if self.stage != GameStage::Join {
             return Err(ContractError::new(
                 "Cannot call `play_hand` if the game is not in the `Join` stage.",
@@ -185,7 +185,7 @@ impl<'a> PokerContract<'a> {
         msg_sender: &Address,
         action: Action,
         value: u64,
-    ) -> Result<(), ContractError> {
+    ) -> Result<()> {
         if self.stage != GameStage::Play {
             return Err(ContractError::new(
                 "Cannot call `take_action` if the game is not in the `Play` stage.",
@@ -244,7 +244,7 @@ impl<'a> PokerContract<'a> {
     //Allows a player to leave the game with his or her final balance.
     //If a player is in the middle of the hand, his or her cards are folded.
     //Returns the player's final balance
-    pub fn withdraw(&mut self, msg_sender: &Address) -> Result<u64, ContractError> {
+    pub fn withdraw(&mut self, msg_sender: &Address) -> Result<u64> {
         //Remove player from current hand.
         let player_index = self.index[msg_sender.to_string()];
         if player_index > -1 {
@@ -265,7 +265,7 @@ impl<'a> PokerContract<'a> {
     // HELPER FUNCTIONS
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    fn turn_card(&mut self) -> Result<(), ContractError> {
+    fn turn_card(&mut self) -> Result<()> {
         self.deck.next();
         let next = self.deck.next();
         match next {
@@ -279,7 +279,7 @@ impl<'a> PokerContract<'a> {
         }
     }
 
-    fn fold_player(&mut self, player_index: i32) -> Result<u64, ContractError> {
+    fn fold_player(&mut self, player_index: i32) -> Result<u64> {
         self.pot += self.players[player_index].bet;
         self.players[player_index].bet = 0;
         for i in player_index + 1..self.players.len() {
@@ -288,7 +288,7 @@ impl<'a> PokerContract<'a> {
         Ok(self.players.remove(player_index).balance)
     }
 
-    fn pay_winners(&mut self) -> Result<(), ContractError> {
+    fn pay_winners(&mut self) -> Result<()> {
         let winners: Vec<Player> = Vec::new();
         let max = 0;
         for player in self.players.iter() {
@@ -312,7 +312,7 @@ impl<'a> PokerContract<'a> {
     // FUNCTIONS TO REQUEST AND FORMAT STATE
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    pub fn get_public_state(&mut self) -> Result<PublicState, ContractError> {
+    pub fn get_public_state(&mut self) -> Result<PublicState> {
         let mut state = PublicState::new();
 
         state.set_game_id(self.game_id);
@@ -330,7 +330,7 @@ impl<'a> PokerContract<'a> {
         Ok(state)
     }
 
-    fn get_player_state(&mut self, msg_sender: &Address) -> Result<PlayerState, ContractError> {
+    fn get_player_state(&mut self, msg_sender: &Address) -> Result<PlayerState> {
         let player = self.players[0];
         let mut state = PlayerState::new();
 

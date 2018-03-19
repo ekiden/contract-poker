@@ -15,7 +15,7 @@ crate-type = ["staticlib"]
 default = []
 
 [dependencies]
-poker-api = { path = "./api" }
+poker-api = { path = "api/" }
 ekiden-core-common = { path = "./ekiden/core/common" }
 ekiden-core-trusted = { path = "./ekiden/core/trusted" }
 ndarray = { git = "https://github.com/ekiden/rust-ndarray", features = ["serde-1"] }
@@ -23,16 +23,9 @@ protobuf = "1.4.3"
 serde = { git = "https://github.com/ekiden/serde" }
 serde_cbor = { git = "https://github.com/ekiden/cbor" }
 serde_derive = "1.0.27"
-
-[target.'cfg(not(target_env = "sgx"))'.dependencies]
-rand = "0.4.2"
+rs_poker = "0.4.1"
+rand = "0.4"
 
 [build-dependencies]
 ekiden-tools = { path = "./ekiden/tools" }
 ekiden-core-edl = { path = "./ekiden/core/edl" }
-
-[workspace]
-members = [
-    "clients/test-client"
-]
-exclude = ["ekiden"]

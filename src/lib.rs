@@ -1,5 +1,5 @@
 #![feature(use_extern_macros)]
-
+#![no_std]
 extern crate protobuf;
 
 extern crate ekiden_core_common;
@@ -7,7 +7,7 @@ extern crate ekiden_core_trusted;
 
 #[macro_use]
 extern crate poker_api;
-extern crate rand;
+/*extern crate rand;*/
 extern crate rs_poker;
 extern crate serde_cbor;
 
@@ -22,7 +22,7 @@ with_api! {
     create_enclave_rpc!(api);
 }
 
-fn create(request: &CreateGameRequest) -> Result<(PokerState, CreateGameResponse), ContractError> {
+fn create(request: &CreateGameRequest) -> Result<CreateGameResponse> {
     let contract = PokerContract::new(
         request.get_blind(),
         request.get_max_players(),
@@ -37,7 +37,7 @@ fn create(request: &CreateGameRequest) -> Result<(PokerState, CreateGameResponse
     Ok(response)
 }
 
-fn join(request: &JoinGameRequest) -> Result<(PokerState, JoinGameResponse), ContractError> {
+fn join(request: &JoinGameRequest) -> Result<JoinGameResponse> {
     let state = Db::instance().get("state")?;
     let mut playing;
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
@@ -59,7 +59,7 @@ fn join(request: &JoinGameRequest) -> Result<(PokerState, JoinGameResponse), Con
     Ok(response)
 }
 
-fn play(request: &PlayHandRequest) -> Result<(PokerState, PlayHandResponse), ContractError> {
+fn play(request: &PlayHandRequest) -> Result<PlayHandResponse> {
     let state = Db::instance().get("state")?;
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
         contract.play_hand(&Address::from(request.get_sender().tos_string()))?;
@@ -77,7 +77,7 @@ fn play(request: &PlayHandRequest) -> Result<(PokerState, PlayHandResponse), Con
 
 fn take_action(
     request: &TakeActionRequest,
-) -> Result<(PokerState, TakeActionResponse), ContractError> {
+) -> Result<TakeActionResponse> {
     let state = Db::instance().get("state")?;
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
         let action = match request.get_action().to_string() {
@@ -104,7 +104,7 @@ fn take_action(
     Ok(response)
 }
 
-fn leave(request: &WithdrawRequest) -> Result<(PokerState, WithdrawResponse), ContractError> {
+fn leave(request: &WithdrawRequest) -> Result<WithdrawResponse> {
     let state = Db::instance().get("state")?;
     let mut balance = 0;
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
@@ -122,7 +122,7 @@ fn leave(request: &WithdrawRequest) -> Result<(PokerState, WithdrawResponse), Co
     Ok(response)
 }
 
-fn get_player_information(request: &PlayerStateRequest) -> Result<PlayerState, ContractError> {
+/*fn get_player_information(request: &PlayerStateRequest) -> Result<PlayerState, ContractError> {
     let state = Db::instance().get("state")?;
     let contract = PokerContract::from_state(state);
     let player_state = contract.get_player_state(&Address::from(request.get_sender().to_string()));
@@ -136,4 +136,4 @@ fn get_game_information(request: &PublicStateRequest) -> Result<PublicState, Con
     let public_game_state = contract.get_public_state();
 
     Ok(public_game_state)
-}
+}*/
