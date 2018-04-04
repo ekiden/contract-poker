@@ -1,3 +1,4 @@
+#![no_std]
 [package]
 name = "poker"
 version = "0.1.0"
@@ -16,16 +17,22 @@ default = []
 
 [dependencies]
 poker-api = { path = "api/" }
-ekiden-core-common = { path = "./ekiden/core/common" }
-ekiden-core-trusted = { path = "./ekiden/core/trusted" }
+ekiden-core = { path = "./ekiden/core/common" }
+ekiden-trusted = { path = "./ekiden/core/trusted" }
 ndarray = { git = "https://github.com/ekiden/rust-ndarray", features = ["serde-1"] }
 protobuf = "1.4.3"
-serde = { git = "https://github.com/ekiden/serde" }
-serde_cbor = { git = "https://github.com/ekiden/cbor" }
-serde_derive = "1.0.27"
-rs_poker = "0.4.1"
-rand = "0.4"
+# serde = { git = "https://github.com/ekiden/serde" }
+# serde_cbor = { git = "https://github.com/ekiden/cbor" }
+# serde_derive = "1.0.27"
+
+[dependencies.rand]
+version = "0.4"
+default-features = false
+
+[dependencies.rs_poker]
+version = "0.4.1"
+default-features = false
 
 [build-dependencies]
 ekiden-tools = { path = "./ekiden/tools" }
-ekiden-core-edl = { path = "./ekiden/core/edl" }
+ekiden-edl = { path = "./ekiden/core/edl" }

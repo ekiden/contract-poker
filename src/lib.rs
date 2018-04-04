@@ -1,5 +1,5 @@
-#![feature(use_extern_macros)]
 #![no_std]
+#![feature(use_extern_macros)]
 extern crate protobuf;
 
 extern crate ekiden_core_common;
@@ -75,9 +75,7 @@ fn play(request: &PlayHandRequest) -> Result<PlayHandResponse> {
     Ok(response)
 }
 
-fn take_action(
-    request: &TakeActionRequest,
-) -> Result<TakeActionResponse> {
+fn take_action(request: &TakeActionRequest) -> Result<TakeActionResponse> {
     let state = Db::instance().get("state")?;
     let state = with_contract_state(&state, |contract: &mut PokerContract| {
         let action = match request.get_action().to_string() {

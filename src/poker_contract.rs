@@ -37,18 +37,14 @@ pub struct PokerContract<'a> {
 impl<'a> PokerContract<'a> {
     //Creates a new instance of a poker game with all values set to default
     //save for provided parameters
-    pub fn new(
-        blind: u64,
-        max_players: u64,
-        time_per_turn: u64,
-    ) -> Result<PokerContract<'a>> {
+    pub fn new(blind: u64, max_players: u64, time_per_turn: u64) -> Result<PokerContract<'a>> {
         if max_players > 22 || blind == 0 || time_per_turn == 0 {
             return Err(ContractError::new("Invalid game paramaters."));
         }
 
         //TODO: Review if this is the game state that is trying to be returned.
         return Ok(PokerContract {
-            game_id: blind+max_players+time_per_turn,
+            game_id: blind + max_players + time_per_turn,
             blind,
             max_players,
             time_per_turn,
@@ -180,12 +176,7 @@ impl<'a> PokerContract<'a> {
     //Allows a player to take an action or store an action to be made when it is a players turn.
     //The last player in line will initiate the drawing of the next cards.
     //Illegal actions return a contract error
-    pub fn take_action(
-        &mut self,
-        msg_sender: &Address,
-        action: Action,
-        value: u64,
-    ) -> Result<()> {
+    pub fn take_action(&mut self, msg_sender: &Address, action: Action, value: u64) -> Result<()> {
         if self.stage != GameStage::Play {
             return Err(ContractError::new(
                 "Cannot call `take_action` if the game is not in the `Play` stage.",
